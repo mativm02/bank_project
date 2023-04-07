@@ -27,6 +27,7 @@ func createRandomEntry(t *testing.T, account Account) Entry {
 
 	return entry
 }
+
 func TestCreateEntry(t *testing.T) {
 	account := createRandomAccount(t)
 	createRandomEntry(t, account)

@@ -23,7 +23,6 @@ func TestTransferTx(t *testing.T) {
 	results := make(chan TransferTxResults)
 
 	for i := 0; i < n; i++ {
-
 		go func() {
 			result, err := store.TransferTx(context.Background(), CreateTransferParams{
 				FromAccountID: account1.ID,

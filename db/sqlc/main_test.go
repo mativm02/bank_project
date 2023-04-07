@@ -14,8 +14,10 @@ const (
 	dbSource = "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable"
 )
 
-var testQueries *Queries
-var testDB *sql.DB
+var (
+	testQueries *Queries
+	testDB      *sql.DB
+)
 
 // TestMain is the entry point for all tests.
 // It sets up the database connection and runs the tests.
