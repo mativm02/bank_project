@@ -19,5 +19,8 @@ test:
 
 run-all: postgres createdb migrateup
 
+server:
+	go run main.go
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc run-all test
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc run-all test server
