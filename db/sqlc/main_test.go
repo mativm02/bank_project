@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
-	"github.com/matisidler/bank_system/util"
+	"github.com/mativm02/bank_system/util"
 )
 
 var (

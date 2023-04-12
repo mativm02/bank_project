@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/matisidler/bank_system/api"
-	db "github.com/matisidler/bank_system/db/sqlc"
-	"github.com/matisidler/bank_system/util"
+	"github.com/mativm02/bank_system/api"
+	db "github.com/mativm02/bank_system/db/sqlc"
+	"github.com/mativm02/bank_system/util"
 
 	_ "github.com/lib/pq"
 )
@@ -29,5 +29,4 @@ func main() {
 	if err != nil {
 		log.Fatal("Cannot start server:", err)
 	}
-
 }
