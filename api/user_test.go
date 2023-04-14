@@ -156,7 +156,6 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "OK",
 			buildStub: func(store *mockdb.MockStore, functionBody createUserRequest) {
-
 				arg := db.CreateUserParams{
 					Username:       functionBody.Username,
 					FullName:       functionBody.FullName,
