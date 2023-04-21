@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/lib/pq"
@@ -20,21 +19,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func randomUser(password string) db.User {
-
+func randomUser(t *testing.T) (user db.User, password string) {
+	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
-	return db.User{
-		Username:          util.RandomOwner(),
-		HashedPassword:    hashedPassword,
-		FullName:          util.RandomOwner(),
-		Email:             util.RandomEmail(),
-		PasswordChangedAt: time.Now(),
-		CreatedAt:         time.Now(),
+	user = db.User{
+		Username:       util.RandomOwner(),
+		HashedPassword: hashedPassword,
+		FullName:       util.RandomOwner(),
+		Email:          util.RandomEmail(),
 	}
+	return
 }
 
 // func TestGetUserAPI(t *testing.T) {
@@ -145,7 +141,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 	password := "testing"
 
-	user := randomUser(password)
+	user, _ := randomUser(t)
 
 	testCases := []struct {
 		name          string
@@ -245,7 +241,7 @@ func TestCreateUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStub(store, tc.functionBody)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			body, err := json.Marshal(tc.functionBody)
