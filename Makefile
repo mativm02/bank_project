@@ -18,7 +18,6 @@ migratedown:
 migratedown1:
 	migrate -path db/migrations -database "postgres://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down 1
 
-
 sqlc:
 	sqlc generate
 test:
