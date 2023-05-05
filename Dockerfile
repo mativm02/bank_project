@@ -17,3 +17,5 @@ COPY wait-for.sh .
 
 COPY app.env .
 EXPOSE 8080
+CMD [ "/app/main" ]
+ENTRYPOINT [ "/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh" ]
