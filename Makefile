@@ -30,5 +30,4 @@ server:
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/mativm02/bank_system/db/sqlc Store   
 
-
 .PHONY: postgres createdb dropdb migrateup migrateup1 migratedown migratedown1 sqlc run-all test server mock rds-migrateup
