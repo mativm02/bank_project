@@ -3,10 +3,15 @@ package main
 import (
 	"database/sql"
 	"log"
+	"net"
 
 	"github.com/mativm02/bank_system/api"
 	db "github.com/mativm02/bank_system/db/sqlc"
+	"github.com/mativm02/bank_system/gapi"
+	"github.com/mativm02/bank_system/pb"
 	"github.com/mativm02/bank_system/util"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	_ "github.com/lib/pq"
 )
@@ -23,14 +28,48 @@ func main() {
 	}
 	defer conn.Close()
 
+	err = conn.Ping()
+	if err != nil {
+		log.Fatal("cannot ping database:", err)
+	}
+
 	store := db.NewStore(conn)
+
+	runGrpcServer(config, store)
+}
+
+func runGinServer(config util.Config, store db.Store) {
 	server, err := api.NewServer(config, store)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}
 
-	err = server.Start(config.ServerAddress)
+	err = server.Start(config.HTTPServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
+	}
+}
+
+func runGrpcServer(config util.Config, store db.Store) {
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("cannot create server:", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterSimpleBankServer(grpcServer, server)
+
+	// Allowing the gRPC client to explore the server's methods and how to call them.
+	reflection.Register(grpcServer)
+
+	listener, err := net.Listen("tcp", config.GRPCServerAddress)
+	if err != nil {
+		log.Fatal("cannot start server:", err)
+	}
+	log.Printf("starting gRPC server on %s", config.GRPCServerAddress)
+
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatal("cannot serve:", err)
 	}
 }
