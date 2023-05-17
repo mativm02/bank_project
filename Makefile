@@ -19,6 +19,7 @@ migratedown1:
 
 sqlc:
 	sqlc generate
+	make mock
 test:
 	go test -v -cover ./...
 
@@ -26,6 +27,12 @@ run-all: postgres createdb migrateup
 
 server:
 	go run main.go
+
+start-local:
+	make postgres
+	make createdb
+	make migrateup
+	make server
 
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/mativm02/bank_system/db/sqlc Store   
