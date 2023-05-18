@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net"
+	"net/http"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/mativm02/bank_system/api"
 	db "github.com/mativm02/bank_system/db/sqlc"
 	"github.com/mativm02/bank_system/gapi"
@@ -12,6 +15,7 @@ import (
 	"github.com/mativm02/bank_system/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	_ "github.com/lib/pq"
 )
@@ -34,7 +38,7 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-
+	go runGatewayServer(config, store)
 	runGrpcServer(config, store)
 }
 
@@ -69,6 +73,46 @@ func runGrpcServer(config util.Config, store db.Store) {
 	log.Printf("starting gRPC server on %s", config.GRPCServerAddress)
 
 	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatal("cannot serve:", err)
+	}
+}
+
+func runGatewayServer(config util.Config, store db.Store) {
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("cannot create server:", err)
+	}
+
+	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
+	grpcMux := runtime.NewServeMux(jsonOption)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		log.Fatal("cannot register gateway server:", err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", grpcMux)
+
+	listener, err := net.Listen("tcp", config.HTTPServerAddress)
+	if err != nil {
+		log.Fatal("cannot start server:", err)
+	}
+	log.Printf("starting HTTP Gateway server on %s", config.HTTPServerAddress)
+
+	err = http.Serve(listener, mux)
 	if err != nil {
 		log.Fatal("cannot serve:", err)
 	}
