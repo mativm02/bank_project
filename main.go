@@ -13,11 +13,13 @@ import (
 	"github.com/mativm02/bank_system/gapi"
 	"github.com/mativm02/bank_system/pb"
 	"github.com/mativm02/bank_system/util"
+	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	_ "github.com/lib/pq"
+	_ "github.com/mativm02/bank_system/doc/statik"
 )
 
 func main() {
@@ -105,6 +107,14 @@ func runGatewayServer(config util.Config, store db.Store) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
+
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal("cannot create statik file system:", err)
+	}
+
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
+	mux.Handle("/swagger/", swaggerHandler)
 
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
