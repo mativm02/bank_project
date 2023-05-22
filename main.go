@@ -7,6 +7,9 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/mativm02/bank_system/api"
 	db "github.com/mativm02/bank_system/db/sqlc"
@@ -39,9 +42,28 @@ func main() {
 		log.Fatal("cannot ping database:", err)
 	}
 
+	runDBMigration(config.MigrationURL, config.DBSource)
+
 	store := db.NewStore(conn)
 	go runGatewayServer(config, store)
 	runGrpcServer(config, store)
+}
+
+func runDBMigration(migrationURL string, dbSource string) {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		log.Fatal("cannot create migration:", err)
+	}
+
+	if err = migration.Up(); err != nil {
+		if err == migrate.ErrNoChange {
+			log.Println("skipping migration:", err)
+		} else {
+			log.Fatal("cannot migrate up:", err)
+		}
+	}
+
+	log.Println("migration completed successfully")
 }
 
 func runGinServer(config util.Config, store db.Store) {
