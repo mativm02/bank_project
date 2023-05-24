@@ -58,6 +58,7 @@ func HttpLogger(handler http.Handler) http.Handler {
 
 		rec := &ResponseRecorder{
 			ResponseWriter: w,
+			StatusCode:     http.StatusOK,
 		}
 
 		handler.ServeHTTP(rec, r)

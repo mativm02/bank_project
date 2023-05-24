@@ -2,12 +2,15 @@ package gapi
 
 import (
 	"context"
+	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	db "github.com/mativm02/bank_system/db/sqlc"
 	"github.com/mativm02/bank_system/pb"
 	"github.com/mativm02/bank_system/util"
 	"github.com/mativm02/bank_system/val"
+	"github.com/mativm02/bank_system/worker"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,10 +44,23 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		}
 		return nil, status.Errorf(codes.Internal, "cannot create user: %w", err)
 	}
-	// Send verification email
+	//TODO: use db transaction
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.Timeout(10),
+		asynq.ProcessIn(10 * time.Second), // process task in 10 seconds
+		asynq.Queue(worker.QueueCritical),
+	}
+	err = server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, &worker.PayloadSendVerifyEmail{Username: user.Username}, opts...)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot distribute task: %w", err)
+	}
+
 	rsp := &pb.CreateUserResponse{
 		User: convertUser(user),
 	}
+
 	return rsp, nil
 }
 
