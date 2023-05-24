@@ -24,7 +24,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 
 	hashedPassword, err := util.HashPassword(req.GetPassword())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot hash password: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot hash password: %v", err)
 	}
 
 	arg := db.CreateUserTxParams{
@@ -50,10 +50,10 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
 			case "unique_violation":
-				return nil, status.Errorf(codes.AlreadyExists, "username/email already exists: %w", err)
+				return nil, status.Errorf(codes.AlreadyExists, "username/email already exists: %v", err)
 			}
 		}
-		return nil, status.Errorf(codes.Internal, "cannot create user: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot create user: %v", err)
 	}
 
 	rsp := &pb.CreateUserResponse{

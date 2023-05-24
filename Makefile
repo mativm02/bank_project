@@ -21,7 +21,7 @@ sqlc:
 	sqlc generate
 	make mock
 test:
-	go test -v -cover ./...
+	go test -v -cover -short ./...
 
 run-all: postgres createdb migrateup
 

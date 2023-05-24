@@ -44,7 +44,7 @@ func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 	if req.Password != nil {
 		hashedPassword, err := util.HashPassword(req.GetPassword())
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "cannot hash password: %w", err)
+			return nil, status.Errorf(codes.Internal, "cannot hash password: %v", err)
 		}
 		arg.HashedPassword = sql.NullString{
 			String: hashedPassword,
@@ -60,9 +60,9 @@ func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 	user, err := server.store.UpdateUser(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, status.Errorf(codes.NotFound, "user not found: %w", err)
+			return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
 		}
-		return nil, status.Errorf(codes.Internal, "cannot create user: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot create user: %v", err)
 	}
 
 	rsp := &pb.UpdateUserResponse{
