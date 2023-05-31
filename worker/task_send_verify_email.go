@@ -53,7 +53,7 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 		return fmt.Errorf("failed to create verify email: %w", err)
 	}
 	subject := "Welcome to Bank System"
-	verifyUrl := fmt.Sprintf("http://localhost:8080?id=%d&secret_code=%s", verifyEmail.ID, verifyEmail.SecretCode)
+	verifyUrl := fmt.Sprintf("http://localhost:8080/v1/verify_email?id=%d&secret_code=%s", verifyEmail.ID, verifyEmail.SecretCode)
 	content := fmt.Sprintf(`Hello %s, <br/>
 	Thank you for registering to Bank System. <br/>
 	Please verify your email by clicking <a href="%s">here</a>. <br/>
@@ -66,5 +66,5 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 	}
 	log.Info().Str("type", task.Type()).Bytes("payload", task.Payload()).Str("email", user.Email).Msg("processing task")
 
-	return nil
+	return nil 
 }

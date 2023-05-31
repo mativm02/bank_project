@@ -45,8 +45,6 @@ func ValidatePassword(value string) error {
 	return ValidateString(value, 6, 100)
 }
 
-
-
 func ValidateFullName(value string) error {
 	if err := ValidateString(value, 3, 100); err != nil {
 		return err
@@ -56,4 +54,15 @@ func ValidateFullName(value string) error {
 		return fmt.Errorf("must contain only letters, or spaces")
 	}
 	return nil
+}
+
+func ValidateEmailID(value int64) error {
+	if value <= 0 {
+		return fmt.Errorf("must be a positive number")
+	}
+	return nil
+}
+
+func ValidateSecretCode(value string) error {
+	return ValidateString(value, 32, 128)
 }
