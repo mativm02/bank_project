@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 
 	"github.com/hibiken/asynq"
+	db "github.com/mativm02/bank_system/db/sqlc"
+	"github.com/mativm02/bank_system/util"
 	"github.com/rs/zerolog/log"
 )
 
@@ -39,14 +41,29 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 
 	user, err := processor.store.GetUser(ctx, payload.Username)
 	if err != nil {
-		// if err == sql.ErrNoRows {
-		// 	return fmt.Errorf("failed to get user: %w", asynq.SkipRetry)
-		// }
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 
-	// TODO: send email to user
+	verifyEmail, err := processor.store.CreateVerifyEmail(ctx, db.CreateVerifyEmailParams{
+		Username:   user.Username,
+		Email:      user.Email,
+		SecretCode: util.RandomString(32),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create verify email: %w", err)
+	}
+	subject := "Welcome to Bank System"
+	verifyUrl := fmt.Sprintf("http://localhost:8080?id=%d&secret_code=%s", verifyEmail.ID, verifyEmail.SecretCode)
+	content := fmt.Sprintf(`Hello %s, <br/>
+	Thank you for registering to Bank System. <br/>
+	Please verify your email by clicking <a href="%s">here</a>. <br/>
+	`, user.FullName, verifyUrl)
+	to := []string{user.Email}
 
+	err = processor.mailer.SendEmail(subject, content, to, nil, nil, nil)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
 	log.Info().Str("type", task.Type()).Bytes("payload", task.Payload()).Str("email", user.Email).Msg("processing task")
 
 	return nil
